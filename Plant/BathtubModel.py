@@ -19,7 +19,7 @@ class BathtubModel:
 
     g = 9.8
 
-    def __init__(self, A: float, C: float, H_0: float) -> None:
+    def __init__(self, A: float, C: float, H_0: float, target: float) -> None:
         """
         Initialize the BathtubModel class.
         :param A: cross-sectional area of the bathtub
@@ -29,7 +29,7 @@ class BathtubModel:
         self.A = A  # cross-sectional area of the bathtub
         self.C = C  # cross-sectional area of the drain
         self.H = H_0  # initial height of water in the bathtub
-        self.target = H_0
+        self.target = target
 
     def update(self, signal: float, noise: float = 0.01) -> float:
         """

@@ -17,6 +17,10 @@ import matplotlib.pyplot as plt
 from controller.GeneralController import PIDController
 from Plant.BathtubModel import BathtubModel
 
+# plot imports
+from visualization.params import plot_params
+from visualization.error import plot_error
+
 
 # 1. Init Controller parameters
 learning_rate = 0.01
@@ -60,7 +64,7 @@ class CONSYS:
         for _ in range(num_epochs):
             # run the epoch
             error, grad = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))(
-                params, states, error_history, self.target
+                params, states, error_history
             )
 
             print("params: ", params)
@@ -80,42 +84,29 @@ class CONSYS:
             track_K_i.append(params["K_i"])
 
         # pass track_K_p, track_K_d, track_K_i to plot_params
-        self.plot_params(track_K_p, track_K_d, track_K_i)
+        plot_params(track_K_p, track_K_d, track_K_i)
         # pass error_history[2:] to plot_error to remove the first two zeros
         self.plot_error(error_history[2:])
 
         return error_history
 
-    def run_epoch(self, params, states, error_history, target):
-        controller = self.controller(learning_rate, noise, K_p, K_i, K_d)
+    def run_epoch(self, params, states, error_history):
+        controller = self.controller()
         # Initialize the plant
         plant = self.plant(
-            cross_sectional_area, drain_cross_sectional_area, initial_height
+            cross_sectional_area,
+            drain_cross_sectional_area,
+            initial_height,
+            self.target,
         )
 
         for _ in range(num_timesteps):
             # Update the controller
-            U = controller.update(params, states[-1], error_history, target)
+            U = controller.update(params, states[-1], error_history, self.target)
             # Update the plant
             states.append(plant.update(U, noise))
 
-        return self.mean_square_error(jnp.array(states), target)
-
-    def plot_params(self, track_K_p, track_K_d, track_K_i):
-        plt.title("Control parameters")
-        plt.plot(track_K_p, label="K_p", color="blue")
-        plt.plot(track_K_d, label="K_d", color="orange")
-        plt.plot(track_K_i, label="K_i", color="green")
-        plt.legend()
-        plt.savefig("Control_parameters.png")
-        plt.show()
-
-    def plot_error(self, error_history):
-        plt.title("Learning progress")
-        plt.plot(error_history, label="error", color="black")
-        plt.legend()
-        plt.savefig("Learning_progress.png")
-        plt.show()
+        return self.mean_square_error(jnp.array(states), self.target)
 
     def mean_square_error(self, predictions, targets):
         return jnp.mean(jnp.square(predictions - targets))
