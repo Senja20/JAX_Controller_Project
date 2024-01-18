@@ -29,7 +29,7 @@ class BathtubModel:
         self.A = A  # cross-sectional area of the bathtub
         self.C = C  # cross-sectional area of the drain
         self.H = H_0  # initial height of water in the bathtub
-        self.target = target
+        self.target = target  # target height of water in the bathtub
 
     def update(self, signal: float, noise: float = 0.01) -> float:
         """
@@ -38,26 +38,26 @@ class BathtubModel:
         :return: height of water in the bathtub after one time step
         """
         # water exiting the drain
-        water_exiting_drain = self.water_exiting_drain(self.target)
+        Q = self.water_exiting_drain()
         # volume of water exiting the drain
-        volume_exiting_drain = signal + noise - water_exiting_drain
+        volume_exiting_drain = signal + noise - Q
         # height of water in the bathtub after one time step
         self.H = self.H + volume_exiting_drain / self.A
 
         return self.H
 
-    def velocity(self, H: float) -> float:
+    def velocity(self) -> float:
         """
         Calculate the velocity of water exiting the drain.
         :param H: height of water in the bathtub
         :return: velocity of water exiting the drain
         """
-        return jnp.sqrt(2 * self.g * H)
+        return jnp.sqrt(2 * self.g * self.H)
 
-    def water_exiting_drain(self, H: float) -> float:
+    def water_exiting_drain(self) -> float:
         """
         Calculate the water exiting the drain.
         :param H: height of water in the bathtub
         :return: water exiting the drain
         """
-        return self.C * self.velocity(H)
+        return self.C * self.velocity()

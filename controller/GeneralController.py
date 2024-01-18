@@ -31,9 +31,8 @@ class PIDController(GeneralController):
         """Update the PID controller"""
         self.error = target_state - current_state
 
-        error_array = jnp.array(error_history)
         self.derivate = params["K_d"] * self.calculate_derivative()
-        self.integral = params["K_i"] * jnp.sum(error_array)
+        self.integral = params["K_i"] * jnp.sum(jnp.array(error_history))
 
         self.last_error = self.error
 
