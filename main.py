@@ -13,7 +13,7 @@ import random
 
 import matplotlib.pyplot as plt
 
-from controller.GeneralController import PIDController
+from controller.PIDController import PIDController
 from Plant.BathtubModel import BathtubModel
 
 # plot imports
@@ -39,9 +39,16 @@ initial_height = 50.0
 goal_height = 50.0
 
 
+params = {
+    "K_p": K_p,  # blue
+    "K_d": K_d,  # orange
+    "K_i": K_i,  # green
+}
+
+
 class CONSYS:
     def __init__(self, controller, plant, target_state):
-        self.controller = controller
+        self.controller = controller(params, learning_rate, noise)
         self.plant = plant
         self.target = target_state
 
@@ -49,17 +56,6 @@ class CONSYS:
         # initialize the error history
         # added two zeros to error_history to avoid error in mean_square_error
         error_history = [0, 0]
-
-        # initialize the tracking of the parameters for plotting
-        track_K_p = []
-        track_K_d = []
-        track_K_i = []
-
-        params = {
-            "K_p": K_p,  # blue
-            "K_d": K_d,  # orange
-            "K_i": K_i,  # green
-        }
 
         # initialize the states
         # states are the height of the water in the bathtub
@@ -69,13 +65,13 @@ class CONSYS:
         for _ in range(num_epochs):
             # run the epoch
             error, grad = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))(
-                params, states, error_history
+                self.controller.params, states, error_history
             )
 
             print("-------------------")
 
             pprint.pprint("params")
-            pprint.pprint(params)
+            pprint.pprint(self.controller.params)
             pprint.pprint("grad")
             pprint.pprint(grad)
 
@@ -83,20 +79,13 @@ class CONSYS:
             error_history.append(error)
             states = states[-1:]
 
-            # update the parameters
-            for k, V in params.items():
-                params[k] = V - learning_rate * grad[k]
-
-            # for each epoch, track the parameters - used for plotting
-            track_K_p.append(params["K_p"])
-            track_K_d.append(params["K_d"])
-            track_K_i.append(params["K_i"])
+            self.controller.update_params(grad)
 
         # remove the first two zeros from error_history
         del error_history[:2]
 
         # pass track_K_p, track_K_d, track_K_i to plot_params
-        plot_params(track_K_p, track_K_d, track_K_i)
+        self.controller.visualization_params()
         # pass error_history[2:] to plot_error to remove the first two zeros
         plot_error(error_history)
 
@@ -104,7 +93,7 @@ class CONSYS:
 
     def run_epoch(self, params, states, error_history):
         # Initialize the controller here in order for it to be traced by jax
-        controller_instance = self.controller()
+        self.controller.reset()
         # Initialize the plant
         plant_instance = self.plant(
             cross_sectional_area,
@@ -115,9 +104,7 @@ class CONSYS:
 
         for _ in range(num_timesteps):
             # Update the controller
-            U = controller_instance.update(
-                params, states[-1], error_history, self.target
-            )
+            U = self.controller.update(params, states[-1], error_history, self.target)
             # Update the plant
             states.append(plant_instance.update(U, noise))
 
