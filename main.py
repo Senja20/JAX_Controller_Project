@@ -7,10 +7,9 @@ import numpy as np
 import jax.numpy as jnp
 import jax
 
-import random
+import pprint
 
-from functools import partial
-from jax import jit
+import random
 
 import matplotlib.pyplot as plt
 
@@ -47,17 +46,23 @@ class CONSYS:
         self.target = target_state
 
     def run(self):
+        # initialize the error history
+        # added two zeros to error_history to avoid error in mean_square_error
         error_history = [0, 0]
 
+        # initialize the tracking of the parameters for plotting
         track_K_p = []
         track_K_d = []
         track_K_i = []
 
         params = {
-            "K_p": K_p,
-            "K_d": K_d,
-            "K_i": K_i,
+            "K_p": K_p,  # blue
+            "K_d": K_d,  # orange
+            "K_i": K_i,  # green
         }
+
+        # initialize the states
+        # states are the height of the water in the bathtub
         states = []
         states.append(initial_height)
 
@@ -67,8 +72,12 @@ class CONSYS:
                 params, states, error_history
             )
 
-            print("params: ", params)
-            print("grad: ", grad)
+            print("-------------------")
+
+            pprint.pprint("params")
+            pprint.pprint(params)
+            pprint.pprint("grad")
+            pprint.pprint(grad)
 
             # track the error
             error_history.append(error)
@@ -83,17 +92,21 @@ class CONSYS:
             track_K_d.append(params["K_d"])
             track_K_i.append(params["K_i"])
 
+        # remove the first two zeros from error_history
+        del error_history[:2]
+
         # pass track_K_p, track_K_d, track_K_i to plot_params
         plot_params(track_K_p, track_K_d, track_K_i)
         # pass error_history[2:] to plot_error to remove the first two zeros
-        self.plot_error(error_history[2:])
+        plot_error(error_history)
 
         return error_history
 
     def run_epoch(self, params, states, error_history):
-        controller = self.controller()
+        # Initialize the controller here in order for it to be traced by jax
+        controller_instance = self.controller()
         # Initialize the plant
-        plant = self.plant(
+        plant_instance = self.plant(
             cross_sectional_area,
             drain_cross_sectional_area,
             initial_height,
@@ -102,13 +115,19 @@ class CONSYS:
 
         for _ in range(num_timesteps):
             # Update the controller
-            U = controller.update(params, states[-1], error_history, self.target)
+            U = controller_instance.update(
+                params, states[-1], error_history, self.target
+            )
             # Update the plant
-            states.append(plant.update(U, noise))
+            states.append(plant_instance.update(U, noise))
 
         return self.mean_square_error(jnp.array(states), self.target)
 
     def mean_square_error(self, predictions, targets):
+        """
+        We take the difference between the predictions and the targets, square it, and take the mean.
+        The predictions are the states, and the targets are the goal height.
+        """
         return jnp.mean(jnp.square(predictions - targets))
 
 
