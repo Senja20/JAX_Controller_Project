@@ -31,6 +31,13 @@ class BathtubModel:
         self.H = H_0  # initial height of water in the bathtub
         self.target = target  # target height of water in the bathtub
 
+    def reset(self) -> None:
+        """
+        Reset the BathtubModel class.
+        :return: None
+        """
+        self.H = self.target
+
     def update(self, signal: float, noise: float = 0.01) -> float:
         """
         Update the BathtubModel class.

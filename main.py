@@ -24,10 +24,6 @@ from visualization.error import plot_error
 # 1. Init Controller parameters
 learning_rate = 0.01
 noise = random.uniform(-0.01, 0.01)
-K_p = 0.1
-K_d = 0.09
-K_i = 0.3
-
 
 num_epochs = 100
 num_timesteps = 10
@@ -39,17 +35,15 @@ initial_height = 50.0
 goal_height = 50.0
 
 
-params = {
-    "K_p": K_p,  # blue
-    "K_d": K_d,  # orange
-    "K_i": K_i,  # green
-}
-
-
 class CONSYS:
     def __init__(self, controller, plant, target_state):
-        self.controller = controller(params, learning_rate, noise)
-        self.plant = plant
+        self.controller = controller(learning_rate, noise)
+        self.plant = plant(
+            cross_sectional_area,
+            drain_cross_sectional_area,
+            initial_height,
+            target_state,
+        )
         self.target = target_state
 
     def run(self):
@@ -64,16 +58,9 @@ class CONSYS:
 
         for _ in range(num_epochs):
             # run the epoch
-            error, grad = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))(
+            error, grad = (jax.value_and_grad(self.run_epoch, argnums=0))(
                 self.controller.params, states, error_history
             )
-
-            print("-------------------")
-
-            pprint.pprint("params")
-            pprint.pprint(self.controller.params)
-            pprint.pprint("grad")
-            pprint.pprint(grad)
 
             # track the error
             error_history.append(error)
@@ -94,27 +81,25 @@ class CONSYS:
     def run_epoch(self, params, states, error_history):
         # Initialize the controller here in order for it to be traced by jax
         self.controller.reset()
-        # Initialize the plant
-        plant_instance = self.plant(
-            cross_sectional_area,
-            drain_cross_sectional_area,
-            initial_height,
-            self.target,
-        )
+        self.plant.reset()
+
+        update_states = []
 
         for _ in range(num_timesteps):
             # Update the controller
             U = self.controller.update(params, states[-1], error_history, self.target)
             # Update the plant
-            states.append(plant_instance.update(U, noise))
+            new_height = self.plant.update(U, noise)
+            update_states.append(new_height)
 
-        return self.mean_square_error(jnp.array(states), self.target)
+        return self.mean_square_error(jnp.array(update_states), self.target)
 
     def mean_square_error(self, predictions, targets):
         """
         We take the difference between the predictions and the targets, square it, and take the mean.
         The predictions are the states, and the targets are the goal height.
         """
+        # (d) Compute MSE over the error history.
         return jnp.mean(jnp.square(predictions - targets))
 
 

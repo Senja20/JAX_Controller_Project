@@ -1,15 +1,29 @@
 import jax.numpy as jnp
 from controller.GeneralController import GeneralController
 import matplotlib.pyplot as plt
+import random
+
+# random initialization of the parameters
+K_p = random.uniform(0, 1)
+K_d = random.uniform(0, 1)
+K_i = random.uniform(0, 1)
+
+
+params_initial_PID = {
+    "K_p": K_p,  # blue
+    "K_d": K_d,  # orange
+    "K_i": K_i,  # green
+}
 
 
 class PIDController(GeneralController):
     """PID controller class"""
 
-    def __init__(self, params, learning_rate, noise_rate):
+    def __init__(self, learning_rate, noise_rate):
         """Initialize the PID controller"""
         super().__init__(learning_rate, noise_rate)
-        self.params = params
+        self.params = params_initial_PID
+
         self.error = 0
         self.derivate = 0
         self.integral = 0
@@ -32,14 +46,13 @@ class PIDController(GeneralController):
 
     def __calculate_derivative(self):
         """Calculate the derivative of the PID controller"""
-        return self.error - self.last_error
+        return self.last_error - self.error
 
     def reset(self):
         """Reset the PID controller"""
         self.error = 0
         self.derivate = 0
         self.integral = 0
-
         self.last_error = 0
 
     def update_params(self, grad):
