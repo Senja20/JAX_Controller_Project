@@ -1,5 +1,5 @@
 """
-1. Initialize the controller’s parameters (Ω): the three k values for a standard PID controller and the
+1. Initialize the controllers parameters (Ω): the three k values for a standard PID controller and the
 weights and biases for a neural-net-based controller
 """
 
@@ -8,12 +8,14 @@ import jax.numpy as jnp
 import jax
 
 import pprint
-
 import random
-
 import matplotlib.pyplot as plt
 
+# controller imports
 from controller.PIDController import PIDController
+from controller.NNController import NNController
+
+# model imports
 from Plant.BathtubModel import BathtubModel
 
 # plot imports
@@ -23,7 +25,7 @@ from visualization.error import plot_error
 
 # 1. Init Controller parameters
 learning_rate = 0.01
-noise = random.uniform(-0.01, 0.01)
+noise_initial = random.uniform(-0.01, 0.01)
 
 num_epochs = 100
 num_timesteps = 10
@@ -37,7 +39,7 @@ goal_height = 50.0
 
 class CONSYS:
     def __init__(self, controller, plant, target_state):
-        self.controller = controller(learning_rate, noise)
+        self.controller = controller(learning_rate, noise_initial)
         self.plant = plant(
             cross_sectional_area,
             drain_cross_sectional_area,
@@ -49,60 +51,70 @@ class CONSYS:
     def run(self):
         # initialize the error history
         # added two zeros to error_history to avoid error in mean_square_error
-        error_history = [0, 0]
+        error_history = []
 
-        # initialize the states
-        # states are the height of the water in the bathtub
-        states = []
-        states.append(initial_height)
+        grad_func = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))
 
-        for _ in range(num_epochs):
+        for epoch in range(num_epochs):
             # run the epoch
-            error, grad = (jax.value_and_grad(self.run_epoch, argnums=0))(
-                self.controller.params, states, error_history
-            )
+            error, grad = grad_func(self.controller.params, error_history)
 
             # track the error
             error_history.append(error)
-            states = states[-1:]
 
+            # (f) Update Ω based on the gradients.
             self.controller.update_params(grad)
 
-        # remove the first two zeros from error_history
-        del error_history[:2]
+            # print params every 10 epochs
+            if epoch % 10 == 0:
+                print("Epoch: ", epoch)
+                print("Error: ", error)
 
         # pass track_K_p, track_K_d, track_K_i to plot_params
         self.controller.visualization_params()
-        # pass error_history[2:] to plot_error to remove the first two zeros
-        plot_error(error_history)
+
+        plot_error(error_history, self.controller.__str__())
 
         return error_history
 
-    def run_epoch(self, params, states, error_history):
+    def run_epoch(self, params, error_history):
         # Initialize the controller here in order for it to be traced by jax
         self.controller.reset()
         self.plant.reset()
 
-        update_states = []
+        self.controller.noise = random.uniform(-0.01, 0.01)
+        update_states = jnp.array([initial_height])
+        error_timestamp_acc = 0
 
-        for _ in range(num_timesteps):
+        for s in range(num_timesteps):
             # Update the controller
-            U = self.controller.update(params, states[-1], error_history, self.target)
+            U = self.controller.update(
+                params,
+                update_states[-1],
+                error_timestamp_acc,
+                self.target,
+            )
             # Update the plant
-            new_height = self.plant.update(U, noise)
-            update_states.append(new_height)
+            new_height = self.plant.update(U, self.controller.noise)
 
-        return self.mean_square_error(jnp.array(update_states), self.target)
+            # save the values - used tp calculate the error in MSE function
+            update_states = jnp.append(update_states, new_height)
 
-    def mean_square_error(self, predictions, targets):
+            # save the error
+            error_timestamp_acc += self.target - new_height
+
+        # returns mean square error by using the difference between the states and the target
+        return self.mean_square_error(update_states, self.target)
+
+    def mean_square_error(self, predictions, target):
         """
         We take the difference between the predictions and the targets, square it, and take the mean.
         The predictions are the states, and the targets are the goal height.
         """
         # (d) Compute MSE over the error history.
-        return jnp.mean(jnp.square(predictions - targets))
+        return jnp.mean(jnp.square(target - predictions))
 
 
 if __name__ == "__main__":
-    consys = CONSYS(PIDController, BathtubModel, goal_height)
-    error_history = consys.run()
+    system = CONSYS(NNController, BathtubModel, goal_height)
+    error_history = system.run()

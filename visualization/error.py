@@ -3,9 +3,9 @@
 import matplotlib.pyplot as plt
 
 
-def plot_error(error_history):
-    plt.title("Learning progress")
+def plot_error(error_history, controller_name):
+    plt.title(f"Learning progress - {controller_name}")
     plt.plot(error_history, label="error", color="black")
     plt.legend()
-    plt.savefig("Learning_progress.png")
+    plt.savefig(f"Learning_progress_{controller_name}.png")
     plt.show()
