@@ -16,7 +16,7 @@ class NNController(GeneralController):
     """
 
     # constructor
-    def __init__(self, learning_rate, noise_rate):
+    def __init__(self, learning_rate: float, noise_rate: float):
         """Initialize the neural network controller"""
         super().__init__(learning_rate, noise_rate)
         self.params = self.__init_network_params([3, 3, 3, 3, 1], random.PRNGKey(0))
@@ -28,8 +28,21 @@ class NNController(GeneralController):
         return "Neural network controller"
 
     # public method
-    def update(self, params, current_state, error_history, target_state):
-        """Update the neural network controller"""
+    def update(
+        self,
+        params: dict,
+        current_state: float,
+        error_history: list[float],
+        target_state: float,
+    ) -> float:
+        """
+        Update the neural network controller
+        :param params: the parameters of the neural network controller (list)
+        :param current_state: the current state (float)
+        :param error_history: the error history (list)
+        :param target_state: the target state (float)
+        :return: the output of the neural network controller (float)
+        """
         self.error = target_state - current_state
 
         self.derivate = super()._calculate_derivative()
@@ -50,6 +63,8 @@ class NNController(GeneralController):
         Traverse the parameters and gradients simultaneously, and update the parameters
         params has to be a list of tuples, where each tuple is (W, b)
         grad has to be a list of tuples, where each tuple is (dW, db)
+        :param grad: the gradients (list)
+        :return: None
         """
 
         self.params = [
@@ -75,10 +90,13 @@ class NNController(GeneralController):
             for m, n, k in zip(sizes[:-1], sizes[1:], keys)
         ]
 
-    def __feedforward(self, params, inputs_layer):
+    def __feedforward(self, params: dict, inputs_layer: jnp.ndarray) -> float:
         """Feedforward the neural network controller
         For each layer, multiply the inputs by the weights and add the bias
         Then, apply the activation function
+        :param params: the parameters of the neural network controller (list)
+        :param inputs_layer: the inputs of the neural network controller (list)
+        :return: the output of the neural network controller (float)
         """
 
         step = jnp.array(inputs_layer)

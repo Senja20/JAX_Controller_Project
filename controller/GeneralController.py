@@ -8,8 +8,12 @@ class GeneralController:
     """General controller class"""
 
     # constructor
-    def __init__(self, learning_rate, noise_rate):
-        """Initialize the controller"""
+    def __init__(self, learning_rate: float, noise_rate: float):
+        """¨
+        Initialize the controller
+        :param learning_rate: the learning rate (float)
+        :param noise_rate: the noise rate (float)
+        """
         self.learning_rate = learning_rate
         self.noise_rate = noise_rate
 
@@ -24,7 +28,10 @@ class GeneralController:
 
     # public method
     def reset(self):
-        """Reset the PID controller"""
+        """
+        Reset the PID controller"
+        :return: None
+        """
         self.error = 0
         self.derivate = 0
         self.integral = 0
@@ -32,5 +39,8 @@ class GeneralController:
 
     # protected method
     def _calculate_derivative(self):
-        """Calculate the derivative of the neural network controller"""
+        """¨
+        Calculate the derivative of the neural network controller
+        :return: the derivative (float)
+        """
         return self.last_error - self.error
