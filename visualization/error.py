@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 
 
-def plot_error(error_history, controller_name):
+def plot_error(error_history: list[float], controller_name: str) -> None:
     """
     The function to plot the error history of the neural network.
     This makes a plot which is displayed to the user.

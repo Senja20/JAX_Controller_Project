@@ -5,7 +5,7 @@ This file contains the function to plot the control parameters.
 import matplotlib.pyplot as plt
 
 
-def plot_params(track_K_p, track_K_d, track_K_i):
+def plot_params(track_K_p: list[float], track_K_d: list[float], track_K_i: list[float]):
     """
     Function to plot the control parameters.
     This makes a plot which is displayed to the user.

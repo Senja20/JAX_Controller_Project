@@ -33,6 +33,7 @@ class PIDController(GeneralController):
         """String representation of the PID controller"""
         return "PID controller"
 
+    # public method
     def update(self, params, current_state, error_history, target_state):
         """Update the PID controller"""
         self.error = target_state - current_state

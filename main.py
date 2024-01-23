@@ -12,15 +12,13 @@ import random
 import matplotlib.pyplot as plt
 
 # controller imports
-from controller.PIDController import PIDController
-from controller.NNController import NNController
+from controller import PIDController, NNController
 
 # model imports
-from Plant.BathtubModel import BathtubModel
+from plant import BathtubModel
 
 # plot imports
-from visualization.params import plot_params
-from visualization.error import plot_error
+from visualization import plot_error, plot_params
 
 # hyperparameters
 learning_rate = 0.01
@@ -37,7 +35,7 @@ goal_height = 50.0
 
 
 class CONSYS:
-    def __init__(self, controller, plant, target_state):
+    def __init__(self, controller, plant, target_state: float):
         """
         This class contains the controller, the plant and the target state.
         :param controller: the controller (model)
@@ -54,7 +52,7 @@ class CONSYS:
         )
         self.target = target_state
 
-    def run(self):
+    def run(self) -> list:
         """
         this method runs the system, and contains the loop for the epochs
         :return: error_history: the error history (list)
@@ -88,7 +86,7 @@ class CONSYS:
 
         return error_history
 
-    def run_epoch(self, params, error_history):
+    def run_epoch(self, params: dict, error_history: list[float]) -> float:
         """
         This method runs the epoch, and contains the loop for the timesteps
         :param params: the parameters of the controller (list)
@@ -129,7 +127,7 @@ class CONSYS:
         # returns mean square error by using the difference between the states and the target
         return self.mean_square_error(update_states, self.target)
 
-    def mean_square_error(self, predictions, target):
+    def mean_square_error(self, predictions: list[float], target: float) -> float:
         """
         Loss
         We take the difference between the predictions and the targets, square it, and take the mean.

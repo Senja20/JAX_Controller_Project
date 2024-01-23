@@ -19,7 +19,7 @@ class NNController(GeneralController):
     def __init__(self, learning_rate, noise_rate):
         """Initialize the neural network controller"""
         super().__init__(learning_rate, noise_rate)
-        self.params = self.__init_network_params([3, 3, 3, 1], random.PRNGKey(0))
+        self.params = self.__init_network_params([3, 3, 3, 3, 1], random.PRNGKey(0))
 
         self.activation = jax.nn.sigmoid
 
