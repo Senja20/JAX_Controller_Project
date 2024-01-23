@@ -21,10 +21,6 @@ from plant import BathtubModel
 # plot imports
 from visualization import plot_error, plot_params
 
-# hyperparameters
-num_epochs = 100
-num_timesteps = 10
-
 
 class CONSYS:
     def __init__(self, controller, plant):
@@ -35,13 +31,26 @@ class CONSYS:
         :param target_state: the target state (float)
 
         """
-        self.controller = controller(
-            float(environ.get("LEARNING_RATE")),
-            random.uniform(
-                float(environ.get("NOISE_LOWER_BOUND")),
-                float(environ.get("NOISE_UPPER_BOUND")),
-            ),
-        )
+
+        try:
+            self.controller = controller(
+                float(environ.get("LEARNING_RATE")),
+                random.uniform(
+                    float(environ.get("NOISE_LOWER_BOUND")),
+                    float(environ.get("NOISE_UPPER_BOUND")),
+                ),
+            )
+        except TypeError as e:
+            print(e)
+            # this is so that even if the values are not set in the .env file, the program will still run
+            self.controller = controller(
+                0.01,
+                random.uniform(
+                    -0.01,
+                    0.01,
+                ),
+            )
+
         self.plant = plant()
         self.target = self.plant.target
 
@@ -101,6 +110,11 @@ class CONSYS:
 
         except TypeError as e:
             print(e)
+            # this is so that even if the values are not set in the .env file, the program will still run
+            self.controller.noise = random.uniform(
+                -0.01,
+                0.01,
+            )
 
         # re-initialize the history
         update_states = jnp.array([self.plant.initial_height])
@@ -143,5 +157,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(NNController, BathtubModel)
+    system = CONSYS(PIDController, BathtubModel)
     error_history = system.run()

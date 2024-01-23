@@ -3,6 +3,8 @@ from .GeneralController import GeneralController
 import jax
 from jax import random, grad, jit, vmap
 from jax.scipy.special import logsumexp
+from os import environ
+from dotenv import load_dotenv
 
 
 class NNController(GeneralController):
@@ -18,8 +20,20 @@ class NNController(GeneralController):
     # constructor
     def __init__(self, learning_rate: float, noise_rate: float):
         """Initialize the neural network controller"""
+        load_dotenv()
         super().__init__(learning_rate, noise_rate)
-        self.params = self.__init_network_params([3, 3, 3, 3, 1], random.PRNGKey(0))
+        self.params = self.__init_network_params(
+            [3, 3, 3, 3, 1],
+            random.PRNGKey(0),
+            (
+                float(environ.get("WEIGHT_LOWER_BOUND")),
+                float(environ.get("WEIGHT_UPPER_BOUND")),
+            ),
+            (
+                float(environ.get("BIAS_LOWER_BOUND")),
+                float(environ.get("BIAS_UPPER_BOUND")),
+            ),
+        )
 
         self.activation = jax.nn.sigmoid
 
@@ -77,18 +91,30 @@ class NNController(GeneralController):
         pass
 
     # private methods
-    def __random_layer_params(self, m, n, key):
-        w_key, b_key = random.split(key, 2)
-        weight_shape = (n, m)
-        bias_shape = (n,)
-        return random.normal(w_key, weight_shape), random.normal(b_key, bias_shape)
+    def __random_layer_params(
+        self, input_size, output_size, key, weight_range=(-1, 1), bias_range=(-1, 1)
+    ):
+        weight_key, bias_key = random.split(key, 2)
+        weight_shape = (output_size, input_size)
+        bias_shape = (output_size,)
 
-    def __init_network_params(self, sizes, key):
+        weight_vals = self.__gen_rand_vals(weight_key, weight_shape, weight_range)
+        bias_vals = self.__gen_rand_vals(bias_key, bias_shape, bias_range)
+
+        return weight_vals, bias_vals
+
+    def __init_network_params(
+        self, sizes, key, weight_range=(-1, 1), bias_range=(-1, 1)
+    ):
         keys = random.split(key, len(sizes))
         return [
-            self.__random_layer_params(m, n, k)
+            self.__random_layer_params(m, n, k, weight_range, bias_range)
             for m, n, k in zip(sizes[:-1], sizes[1:], keys)
         ]
+
+    def __gen_rand_vals(self, random_key, shape, value_range):
+        min_value, max_value = value_range
+        return min_value + (max_value - min_value) * random.normal(random_key, shape)
 
     def __feedforward(self, params: dict, inputs_layer: jnp.ndarray) -> float:
         """Feedforward the neural network controller
