@@ -17,9 +17,20 @@ class BathtubModel:
     where g is the gravitational constant (9.8m/sec^2).
     """
 
-    g = 9.8
+    g = 9.8  # gravitational constant
 
-    def __init__(self, A: float, C: float, H_0: float, target: float) -> None:
+    cross_sectional_area = 200.0
+    drain_cross_sectional_area = cross_sectional_area / 100.0
+    initial_height = 50.0
+    goal_height = 50.0
+
+    def __init__(
+        self,
+        A: float = cross_sectional_area,
+        C: float = drain_cross_sectional_area,
+        H_0: float = initial_height,
+        target: float = goal_height,
+    ) -> None:
         """
         Initialize the BathtubModel class.
         :param A: cross-sectional area of the bathtub
@@ -30,6 +41,13 @@ class BathtubModel:
         self.C = C  # cross-sectional area of the drain
         self.H = H_0  # initial height of water in the bathtub
         self.target = target  # target height of water in the bathtub
+
+    def __str__(self) -> str:
+        """
+        String representation of the BathtubModel class.
+        :return: string
+        """
+        return "Bathtub model"
 
     def reset(self) -> None:
         """

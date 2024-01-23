@@ -1,4 +1,9 @@
 class CournotCompetition:
+    c = 0.1  # marginal cost
+    p_max = 1  # maximum price
+
+    target = 0.5  # target profit
+
     def __init__(self):
         pass
 

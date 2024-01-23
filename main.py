@@ -22,20 +22,16 @@ from visualization import plot_error, plot_params
 
 # hyperparameters
 learning_rate = 0.01
-noise_initial = random.uniform(-0.01, 0.01)
+noise_lower_bound = -0.01
+noise_upper_bound = 0.01
+noise_initial = random.uniform(noise_lower_bound, noise_upper_bound)
 
 num_epochs = 100
 num_timesteps = 10
 
-# define the plant parameters - used by plant model
-cross_sectional_area = 200.0
-drain_cross_sectional_area = cross_sectional_area / 100.0
-initial_height = 50.0
-goal_height = 50.0
-
 
 class CONSYS:
-    def __init__(self, controller, plant, target_state: float):
+    def __init__(self, controller, plant):
         """
         This class contains the controller, the plant and the target state.
         :param controller: the controller (model)
@@ -44,13 +40,8 @@ class CONSYS:
 
         """
         self.controller = controller(learning_rate, noise_initial)
-        self.plant = plant(
-            cross_sectional_area,
-            drain_cross_sectional_area,
-            initial_height,
-            target_state,
-        )
-        self.target = target_state
+        self.plant = plant()
+        self.target = self.plant.target
 
     def run(self) -> list:
         """
@@ -99,10 +90,10 @@ class CONSYS:
         self.plant.reset()
 
         # noise
-        self.controller.noise = random.uniform(-0.01, 0.01)
+        self.controller.noise = random.uniform(noise_lower_bound, noise_upper_bound)
 
         # re-initialize the history
-        update_states = jnp.array([initial_height])
+        update_states = jnp.array([self.plant.initial_height])
 
         # initialize the error accumulator
         error_timestamp_acc = 0
@@ -112,17 +103,17 @@ class CONSYS:
             U = self.controller.update(
                 params,
                 update_states[-1],
-                error_timestamp_acc,
+                jnp.sum(jnp.array(error_history), dtype=jnp.float32),
                 self.target,
             )
             # Update the plant
-            new_height = self.plant.update(U, self.controller.noise)
+            new_state = self.plant.update(U, self.controller.noise)
 
             # save the values - used tp calculate the error in MSE function
-            update_states = jnp.append(update_states, new_height)
+            update_states = jnp.append(update_states, new_state)
 
             # save the error
-            error_timestamp_acc += self.target - new_height
+            error_timestamp_acc += self.target - new_state
 
         # returns mean square error by using the difference between the states and the target
         return self.mean_square_error(update_states, self.target)
@@ -141,5 +132,5 @@ class CONSYS:
 
 
 if __name__ == "__main__":
-    system = CONSYS(NNController, BathtubModel, goal_height)
+    system = CONSYS(NNController, BathtubModel)
     error_history = system.run()
