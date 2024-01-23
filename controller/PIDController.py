@@ -20,9 +20,15 @@ class PIDController(GeneralController):
     """PID controller class"""
 
     # constructor
-    def __init__(self, learning_rate, noise_rate):
-        """Initialize the PID controller"""
+    def __init__(self, learning_rate: float, noise_rate: float):
+        """
+        Initialize the PID controller - results in an instance of PID controller
+        :param learning_rate: the learning rate (float)
+        :param noise_rate: the noise rate (float)
+        """
+
         super().__init__(learning_rate, noise_rate)
+
         self.params = params_initial_PID
 
         self.track_K_p = []
@@ -34,33 +40,59 @@ class PIDController(GeneralController):
         return "PID controller"
 
     # public method
-    def update(self, params, current_state, error_history, target_state):
-        """Update the PID controller"""
+    def update(
+        self,
+        params: dict,
+        current_state: float,
+        error_history: list[float],
+        target_state: float,
+    ) -> float:
+        """
+        Update the PID controller
+        :param params: the parameters of the PID controller (dict)
+        :param current_state: the current state (float)
+        :param error_history: the error history (list)
+        :param target_state: the target state (float)
+        :return: the output of the PID controller (float)
+        """
+
         self.error = target_state - current_state
 
+        self.predictions = params["K_p"] * self.error
         self.derivate = params["K_d"] * super()._calculate_derivative()
         self.integral = params["K_i"] * error_history
 
         self.last_error = self.error
 
-        return params["K_p"] * self.error + self.derivate + self.integral
+        return self.predictions + self.derivate + self.integral
 
-    def update_params(self, grad):
+    def update_params(self, grad: dict) -> None:
+        """¨
+        Parameters update of the PID controller
+        :param grad: the gradients (dict)
+        :return: None
+        """
         # update the parameters
         for k, V in self.params.items():
             self.params[k] = V - self.learning_rate * grad[k]
 
-        # track the parameters
+        # track the parameters for visualization
         self.__track_params()
 
     def __track_params(self):
-        """Track the parameters"""
+        """
+        Track the parameters by appending them to the lists
+        :return: None
+        """
         self.track_K_p.append(self.params["K_p"])
         self.track_K_i.append(self.params["K_i"])
         self.track_K_d.append(self.params["K_d"])
 
     def visualization_params(self):
-        """Plot the parameters"""
+        """
+        Plot the parameters
+        :return: None
+        """
         plt.title("Control parameters")
         plt.plot(self.track_K_p, label="K_p - prediction", color="blue")
         plt.plot(self.track_K_d, label="K_d - derivative", color="orange")
