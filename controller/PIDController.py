@@ -2,6 +2,8 @@ import jax.numpy as jnp
 from controller.GeneralController import GeneralController
 import matplotlib.pyplot as plt
 import random
+from os import environ
+from dotenv import load_dotenv
 
 # random initialization of the parameters
 K_p = random.uniform(0, 1)
@@ -27,9 +29,24 @@ class PIDController(GeneralController):
         :param noise_rate: the noise rate (float)
         """
 
+        load_dotenv()
+
         super().__init__(learning_rate, noise_rate)
 
-        self.params = params_initial_PID
+        self.params = {
+            "K_p": random.uniform(
+                float(environ.get("KP_LOWER_BOUND")),
+                float(environ.get("KP_UPPER_BOUND")),
+            ),  # blue
+            "K_d": random.uniform(
+                float(environ.get("KD_LOWER_BOUND")),
+                float(environ.get("KD_UPPER_BOUND")),
+            ),  # orange
+            "K_i": random.uniform(
+                float(environ.get("KI_LOWER_BOUND")),
+                float(environ.get("KI_UPPER_BOUND")),
+            ),  # green
+        }
 
         self.track_K_p = []
         self.track_K_i = []
