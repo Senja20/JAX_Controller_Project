@@ -39,7 +39,7 @@ class NNController(GeneralController):
 
     def __str__(self):
         """String representation of the neural network controller"""
-        return "Neural network controller"
+        return "Neural_network_controller"
 
     # public method
     def update(

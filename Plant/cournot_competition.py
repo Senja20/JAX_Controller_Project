@@ -7,6 +7,9 @@ class CournotCompetition:
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "Cournot_Competition"
+
     def update(self, signal: float, noise: float = 0.01) -> float:
         # at each timestep:
 

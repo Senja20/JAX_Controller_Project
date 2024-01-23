@@ -37,7 +37,7 @@ class PIDController(GeneralController):
 
     def __str__(self):
         """String representation of the PID controller"""
-        return "PID controller"
+        return "PID_controller"
 
     # public method
     def update(

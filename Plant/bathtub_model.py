@@ -53,7 +53,7 @@ class BathtubModel:
         String representation of the BathtubModel class.
         :return: string
         """
-        return "Bathtub model"
+        return "Bathtub_model"
 
     def reset(self) -> None:
         """
