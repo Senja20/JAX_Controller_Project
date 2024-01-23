@@ -6,6 +6,8 @@ It is called the BathtubModel as described in the assignment.
 import numpy as np
 import jax.numpy as jnp
 import jax
+from os import environ
+from dotenv import load_dotenv
 
 
 class BathtubModel:
@@ -17,12 +19,16 @@ class BathtubModel:
     where g is the gravitational constant (9.8m/sec^2).
     """
 
+    load_dotenv()
+
     g = 9.8  # gravitational constant
 
-    cross_sectional_area = 200.0
-    drain_cross_sectional_area = cross_sectional_area / 100.0
-    initial_height = 50.0
-    goal_height = 50.0
+    cross_sectional_area = float(environ.get("CROSS_SECTIONAL_AREA"))
+    drain_cross_sectional_area = cross_sectional_area / float(
+        environ.get("DRAIN_CROSS_SECTIONAL_AREA_DIV")
+    )
+    initial_height = float(environ.get("INITIAL_HEIGHT"))
+    goal_height = float(environ.get("GOAL_HEIGHT"))
 
     def __init__(
         self,
@@ -56,7 +62,7 @@ class BathtubModel:
         """
         self.H = self.target
 
-    def update(self, signal: float, noise: float = 0.01) -> float:
+    def update(self, signal: float, noise: float = 0.0) -> float:
         """
         Update the BathtubModel class.
         :param H: height of water in the bathtub

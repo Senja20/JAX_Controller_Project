@@ -6,7 +6,8 @@ weights and biases for a neural-net-based controller
 import numpy as np
 import jax.numpy as jnp
 import jax
-
+from os import environ
+from dotenv import load_dotenv
 import pprint
 import random
 import matplotlib.pyplot as plt
@@ -21,11 +22,6 @@ from plant import BathtubModel
 from visualization import plot_error, plot_params
 
 # hyperparameters
-learning_rate = 0.01
-noise_lower_bound = -0.01
-noise_upper_bound = 0.01
-noise_initial = random.uniform(noise_lower_bound, noise_upper_bound)
-
 num_epochs = 100
 num_timesteps = 10
 
@@ -39,7 +35,13 @@ class CONSYS:
         :param target_state: the target state (float)
 
         """
-        self.controller = controller(learning_rate, noise_initial)
+        self.controller = controller(
+            float(environ.get("LEARNING_RATE")),
+            random.uniform(
+                float(environ.get("NOISE_LOWER_BOUND")),
+                float(environ.get("NOISE_UPPER_BOUND")),
+            ),
+        )
         self.plant = plant()
         self.target = self.plant.target
 
@@ -55,7 +57,7 @@ class CONSYS:
 
         grad_func = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))
 
-        for epoch in range(num_epochs):
+        for epoch in range(int(environ.get("NUMBER_OF_EPOCHS"))):
             # run the epoch
             error, grad = grad_func(self.controller.params, error_history)
 
@@ -90,7 +92,15 @@ class CONSYS:
         self.plant.reset()
 
         # noise
-        self.controller.noise = random.uniform(noise_lower_bound, noise_upper_bound)
+
+        try:
+            self.controller.noise = random.uniform(
+                float(environ.get("NOISE_LOWER_BOUND")),
+                float(environ.get("NOISE_UPPER_BOUND")),
+            )
+
+        except TypeError as e:
+            print(e)
 
         # re-initialize the history
         update_states = jnp.array([self.plant.initial_height])
@@ -98,12 +108,12 @@ class CONSYS:
         # initialize the error accumulator
         error_timestamp_acc = 0
 
-        for s in range(num_timesteps):
+        for s in range(int(environ.get("NUMBER_OF_TIMESTEPS"))):
             # Update the controller
             U = self.controller.update(
                 params,
                 update_states[-1],
-                jnp.sum(jnp.array(error_history), dtype=jnp.float32),
+                error_timestamp_acc,
                 self.target,
             )
             # Update the plant
@@ -132,5 +142,6 @@ class CONSYS:
 
 
 if __name__ == "__main__":
+    load_dotenv()
     system = CONSYS(NNController, BathtubModel)
     error_history = system.run()
