@@ -144,7 +144,7 @@ class CONSYS:
 
     def mean_square_error(self, predictions: list[float], target: float) -> float:
         """
-        Loss
+        Loss - Mean Square Error
         We take the difference between the predictions and the targets, square it, and take the mean.
         The predictions are the states, and the targets are the goal height.
         :param predictions: the states (list)
