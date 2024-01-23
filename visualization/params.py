@@ -8,6 +8,13 @@ import matplotlib.pyplot as plt
 def plot_params(track_K_p, track_K_d, track_K_i):
     """
     Function to plot the control parameters.
+    This makes a plot which is displayed to the user.
+
+    :param track_K_p: the K_p values (list)
+    :param track_K_d: the K_d values (list)
+    :param track_K_i: the K_i values (list)
+
+    :return: None
     """
     plt.title("Control parameters")
     plt.plot(track_K_p, label="K_p", color="blue")

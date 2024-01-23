@@ -22,15 +22,14 @@ from Plant.BathtubModel import BathtubModel
 from visualization.params import plot_params
 from visualization.error import plot_error
 
-
-# 1. Init Controller parameters
+# hyperparameters
 learning_rate = 0.01
 noise_initial = random.uniform(-0.01, 0.01)
 
 num_epochs = 100
 num_timesteps = 10
 
-# Initialize the plant
+# define the plant parameters - used by plant model
 cross_sectional_area = 200.0
 drain_cross_sectional_area = cross_sectional_area / 100.0
 initial_height = 50.0
@@ -39,6 +38,13 @@ goal_height = 50.0
 
 class CONSYS:
     def __init__(self, controller, plant, target_state):
+        """
+        This class contains the controller, the plant and the target state.
+        :param controller: the controller (model)
+        :param plant: the plant (model)
+        :param target_state: the target state (float)
+
+        """
         self.controller = controller(learning_rate, noise_initial)
         self.plant = plant(
             cross_sectional_area,
@@ -49,6 +55,11 @@ class CONSYS:
         self.target = target_state
 
     def run(self):
+        """
+        this method runs the system, and contains the loop for the epochs
+        :return: error_history: the error history (list)
+        """
+
         # initialize the error history
         # added two zeros to error_history to avoid error in mean_square_error
         error_history = []
@@ -65,7 +76,7 @@ class CONSYS:
             # (f) Update Ω based on the gradients.
             self.controller.update_params(grad)
 
-            # print params every 10 epochs
+            # print params every 10 epochs - for debugging
             if epoch % 10 == 0:
                 print("Epoch: ", epoch)
                 print("Error: ", error)
@@ -78,12 +89,24 @@ class CONSYS:
         return error_history
 
     def run_epoch(self, params, error_history):
-        # Initialize the controller here in order for it to be traced by jax
+        """
+        This method runs the epoch, and contains the loop for the timesteps
+        :param params: the parameters of the controller (list)
+        :param error_history: the error history (list)
+        :return: mean_square_error: the mean square error (float)
+        """
+
+        # reset the controller and the plant
         self.controller.reset()
         self.plant.reset()
 
+        # noise
         self.controller.noise = random.uniform(-0.01, 0.01)
+
+        # re-initialize the history
         update_states = jnp.array([initial_height])
+
+        # initialize the error accumulator
         error_timestamp_acc = 0
 
         for s in range(num_timesteps):
@@ -108,8 +131,12 @@ class CONSYS:
 
     def mean_square_error(self, predictions, target):
         """
+        Loss
         We take the difference between the predictions and the targets, square it, and take the mean.
         The predictions are the states, and the targets are the goal height.
+        :param predictions: the states (list)
+        :param target: the target state (float)
+        :return: the mean square error (float)
         """
         # (d) Compute MSE over the error history.
         return jnp.mean(jnp.square(target - predictions))

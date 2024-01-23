@@ -19,6 +19,7 @@ params_initial_PID = {
 class PIDController(GeneralController):
     """PID controller class"""
 
+    # constructor
     def __init__(self, learning_rate, noise_rate):
         """Initialize the PID controller"""
         super().__init__(learning_rate, noise_rate)
