@@ -8,14 +8,12 @@ class GeneralController:
     """General controller class"""
 
     # constructor
-    def __init__(self, learning_rate: float, noise_rate: float):
+    def __init__(self, learning_rate: float):
         """¨
         Initialize the controller
         :param learning_rate: the learning rate (float)
-        :param noise_rate: the noise rate (float)
         """
         self.learning_rate = learning_rate
-        self.noise_rate = noise_rate
 
         self.error = 0
         self.derivate = 0

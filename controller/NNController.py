@@ -18,12 +18,12 @@ class NNController(GeneralController):
     """
 
     # constructor
-    def __init__(self, learning_rate: float, noise_rate: float):
+    def __init__(self, learning_rate: float):
         """Initialize the neural network controller"""
         load_dotenv()
-        super().__init__(learning_rate, noise_rate)
+        super().__init__(learning_rate)
         self.params = self.__init_network_params(
-            [3, 3, 3, 3, 1],
+            [3, 5, 5, 1],
             random.PRNGKey(0),
             (
                 float(environ.get("WEIGHT_LOWER_BOUND")),

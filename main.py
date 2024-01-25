@@ -12,6 +12,7 @@ import pprint
 import random
 import matplotlib.pyplot as plt
 
+
 # controller imports
 from controller import PIDController, NNController
 
@@ -20,6 +21,9 @@ from plant import BathtubModel, CournotCompetition
 
 # plot imports
 from visualization import plot_error, plot_params
+
+# utils imports
+from utils import generate_random_values
 
 
 class CONSYS:
@@ -31,14 +35,10 @@ class CONSYS:
         :param target_state: the target state (float)
 
         """
-
+        print("Initializing the system...")
         try:
             self.controller = controller(
                 float(environ.get("LEARNING_RATE")),
-                random.uniform(
-                    float(environ.get("NOISE_LOWER_BOUND")),
-                    float(environ.get("NOISE_UPPER_BOUND")),
-                ),
             )
         except TypeError as e:
             print(e)
@@ -54,6 +54,8 @@ class CONSYS:
         self.plant = plant()
         self.target = self.plant.target
 
+        self.noise_list = None
+
     def run(self) -> list:
         """
         this method runs the system, and contains the loop for the epochs
@@ -64,11 +66,17 @@ class CONSYS:
         # added two zeros to error_history to avoid error in mean_square_error
         error_history = []
 
-        grad_func = jax.value_and_grad(self.run_epoch, argnums=0)
+        grad_func = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))
 
         for epoch in range(int(environ.get("NUMBER_OF_EPOCHS"))):
+            # new noise list for each epoch
+            self.noise_list = generate_random_values(
+                int(environ.get("NUMBER_OF_TIMESTEPS")),
+                float(environ.get("NOISE_LOWER_BOUND")),
+                float(environ.get("NOISE_UPPER_BOUND")),
+            )
             # run the epoch
-            error, grad = grad_func(self.controller.params, error_history)
+            error, grad = grad_func(self.controller.params)
 
             # track the error
             error_history.append(error)
@@ -88,7 +96,7 @@ class CONSYS:
 
         return error_history
 
-    def run_epoch(self, params: dict, error_history: list[float]) -> float:
+    def run_epoch(self, params: dict) -> float:
         """
         This method runs the epoch, and contains the loop for the timesteps
         :param params: the parameters of the controller (list)
@@ -97,41 +105,29 @@ class CONSYS:
         """
 
         # reset the controller and the plant
+        # todo: reinitialize controller and plant
         self.controller.reset()
         self.plant.reset()
-
-        # noise
-        try:
-            self.controller.noise = random.uniform(
-                float(environ.get("NOISE_LOWER_BOUND")),
-                float(environ.get("NOISE_UPPER_BOUND")),
-            )
-
-        except TypeError as e:
-            print(e)
-            # this is so that even if the values are not set in the .env file, the program will still run
-            self.controller.noise = random.uniform(
-                -0.01,
-                0.01,
-            )
 
         # re-initialize the history
         update_states = jnp.array([self.plant.initial_state])
 
         # initialize the error accumulator
         error_timestamp_acc = 0
+        # todo: use jax.random
 
         for s in range(int(environ.get("NUMBER_OF_TIMESTEPS"))):
             # Update the controller
             U = self.controller.update(
                 params,
                 update_states[-1],
-                jnp.sum(jnp.array(error_history), dtype=jnp.float32),
+                # jnp.sum(jnp.array(error_history), dtype=jnp.float32), # <-- this will work well as in integral is some very specific cases
+                error_timestamp_acc,
                 self.target,
             )
 
             # Update the plant
-            new_state = self.plant.update(U, self.controller.noise)
+            new_state = self.plant.update(U, self.noise_list[s])
 
             # save the values - used tp calculate the error in MSE function
             update_states = jnp.append(update_states, new_state)

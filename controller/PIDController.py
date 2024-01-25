@@ -22,30 +22,20 @@ class PIDController(GeneralController):
     """PID controller class"""
 
     # constructor
-    def __init__(self, learning_rate: float, noise_rate: float):
+    def __init__(self, learning_rate: float):
         """
         Initialize the PID controller - results in an instance of PID controller
         :param learning_rate: the learning rate (float)
-        :param noise_rate: the noise rate (float)
         """
 
         load_dotenv()
 
-        super().__init__(learning_rate, noise_rate)
+        super().__init__(learning_rate)
 
         self.params = {
-            "K_p": random.uniform(
-                float(environ.get("KP_LOWER_BOUND")),
-                float(environ.get("KP_UPPER_BOUND")),
-            ),  # blue
-            "K_d": random.uniform(
-                float(environ.get("KD_LOWER_BOUND")),
-                float(environ.get("KD_UPPER_BOUND")),
-            ),  # orange
-            "K_i": random.uniform(
-                float(environ.get("KI_LOWER_BOUND")),
-                float(environ.get("KI_UPPER_BOUND")),
-            ),  # green
+            "K_p": 0.01,  # blue
+            "K_d": -0.01,  # orange
+            "K_i": 0.0,  # green
         }
 
         self.track_K_p = []
@@ -96,15 +86,6 @@ class PIDController(GeneralController):
         # track the parameters for visualization
         self.__track_params()
 
-    def __track_params(self):
-        """
-        Track the parameters by appending them to the lists
-        :return: None
-        """
-        self.track_K_p.append(self.params["K_p"])
-        self.track_K_i.append(self.params["K_i"])
-        self.track_K_d.append(self.params["K_d"])
-
     def visualization_params(self):
         """
         Plot the parameters
@@ -117,3 +98,13 @@ class PIDController(GeneralController):
         plt.legend()
         plt.savefig("Control_parameters.png")
         plt.show()
+
+    # private method
+    def __track_params(self):
+        """
+        Track the parameters by appending them to the lists
+        :return: None
+        """
+        self.track_K_p.append(self.params["K_p"])
+        self.track_K_i.append(self.params["K_i"])
+        self.track_K_d.append(self.params["K_d"])
