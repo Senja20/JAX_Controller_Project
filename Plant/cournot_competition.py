@@ -1,10 +1,14 @@
 import jax.numpy as jnp
+from os import environ
+from dotenv import load_dotenv
 
 
 class CournotCompetition:
-    c = 0.1  # marginal cost
-    p_max = 1.0  # maximum price
-    target = 1.0  # target profit
+    load_dotenv()
+
+    c = float(environ.get("COST"))  # marginal cost
+    p_max = float(environ.get("P_MAX"))  # maximum price
+    target = float(environ.get("TARGET_PROFIT"))  # target profit
 
     initial_state = 0.0  # initial state
 
@@ -21,7 +25,7 @@ class CournotCompetition:
     def __str__(self):
         return "Cournot_Competition"
 
-    def update(self, current_state, signal: float, noise: float = 0.0) -> float:
+    def update(self, signal: float, noise: float = 0.0) -> float:
         """
         Update the plant
         :param signal: the signal (float)

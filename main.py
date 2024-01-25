@@ -129,6 +129,7 @@ class CONSYS:
                 jnp.sum(jnp.array(error_history), dtype=jnp.float32),
                 self.target,
             )
+
             # Update the plant
             new_state = self.plant.update(U, self.controller.noise)
 
