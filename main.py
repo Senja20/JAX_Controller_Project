@@ -43,18 +43,10 @@ class CONSYS:
         except TypeError as e:
             print(e)
             # this is so that even if the values are not set in the .env file, the program will still run
-            self.controller = controller(
-                0.01,
-                random.uniform(
-                    -0.01,
-                    0.01,
-                ),
-            )
+            self.controller = controller(0.01)
 
         self.plant = plant()
         self.target = self.plant.target
-
-        self.noise_list = None
 
     def run(self) -> list:
         """
@@ -69,12 +61,6 @@ class CONSYS:
         grad_func = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))
 
         for epoch in range(int(environ.get("NUMBER_OF_EPOCHS"))):
-            # new noise list for each epoch
-            self.noise_list = generate_random_values(
-                int(environ.get("NUMBER_OF_TIMESTEPS")),
-                float(environ.get("NOISE_LOWER_BOUND")),
-                float(environ.get("NOISE_UPPER_BOUND")),
-            )
             # run the epoch
             error, grad = grad_func(self.controller.params)
 
@@ -114,20 +100,25 @@ class CONSYS:
 
         # initialize the error accumulator
         error_timestamp_acc = 0
-        # todo: use jax.random
+
+        # generate noise list - new noise list for each epoch
+        noise_list = generate_random_values(
+            int(environ.get("NUMBER_OF_TIMESTEPS")),
+            float(environ.get("NOISE_LOWER_BOUND")),
+            float(environ.get("NOISE_UPPER_BOUND")),
+        )
 
         for s in range(int(environ.get("NUMBER_OF_TIMESTEPS"))):
             # Update the controller
             U = self.controller.update(
                 params,
                 update_states[-1],
-                # jnp.sum(jnp.array(error_history), dtype=jnp.float32), # <-- this will work well as in integral is some very specific cases
                 error_timestamp_acc,
                 self.target,
             )
 
             # Update the plant
-            new_state = self.plant.update(U, self.noise_list[s])
+            new_state = self.plant.update(U, noise_list[s])
 
             # save the values - used tp calculate the error in MSE function
             update_states = jnp.append(update_states, new_state)
