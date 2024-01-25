@@ -1,3 +1,6 @@
+import jax.numpy as jnp
+
+
 class CournotCompetition:
     c = 0.1  # marginal cost
     p_max = 1.0  # maximum price
@@ -27,10 +30,12 @@ class CournotCompetition:
         """
 
         # 1. q_1 updates based on U
-        self.q1 = signal + current_state
-
+        self.q1 += signal
         # 2. q_2 updates based on D
-        self.q2 = noise + self.q2
+        self.q2 += noise
+
+        self.q1 = jnp.clip(self.q1, 0.0, 1.0)
+        self.q2 = jnp.clip(self.q2, 0.0, 1.0)
 
         # 3. q = q_1 + q_2
         q = self.q1 + self.q2
