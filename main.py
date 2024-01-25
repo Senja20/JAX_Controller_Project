@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from controller import PIDController, NNController
 
 # model imports
-from plant import BathtubModel
+from plant import BathtubModel, CournotCompetition
 
 # plot imports
 from visualization import plot_error, plot_params
@@ -64,7 +64,7 @@ class CONSYS:
         # added two zeros to error_history to avoid error in mean_square_error
         error_history = []
 
-        grad_func = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))
+        grad_func = jax.value_and_grad(self.run_epoch, argnums=0)
 
         for epoch in range(int(environ.get("NUMBER_OF_EPOCHS"))):
             # run the epoch
@@ -84,7 +84,7 @@ class CONSYS:
         # pass track_K_p, track_K_d, track_K_i to plot_params
         self.controller.visualization_params()
 
-        plot_error(error_history, self.controller.__str__())
+        plot_error(error_history, (str(self.controller)), (str(self.plant)))
 
         return error_history
 
@@ -101,7 +101,6 @@ class CONSYS:
         self.plant.reset()
 
         # noise
-
         try:
             self.controller.noise = random.uniform(
                 float(environ.get("NOISE_LOWER_BOUND")),
@@ -117,7 +116,7 @@ class CONSYS:
             )
 
         # re-initialize the history
-        update_states = jnp.array([self.plant.initial_height])
+        update_states = jnp.array([self.plant.initial_state])
 
         # initialize the error accumulator
         error_timestamp_acc = 0
@@ -127,7 +126,7 @@ class CONSYS:
             U = self.controller.update(
                 params,
                 update_states[-1],
-                error_timestamp_acc,
+                jnp.sum(jnp.array(error_history), dtype=jnp.float32),
                 self.target,
             )
             # Update the plant
@@ -157,5 +156,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(PIDController, BathtubModel)
+    system = CONSYS(PIDController, CournotCompetition)
     error_history = system.run()

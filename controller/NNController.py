@@ -36,6 +36,8 @@ class NNController(GeneralController):
         )
 
         self.activation = jax.nn.sigmoid
+        # self.activation = jax.nn.relu
+        # self.activation = jax.nn.tanh
 
     def __str__(self):
         """String representation of the neural network controller"""

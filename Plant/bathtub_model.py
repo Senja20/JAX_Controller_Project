@@ -27,14 +27,14 @@ class BathtubModel:
     drain_cross_sectional_area = cross_sectional_area / float(
         environ.get("DRAIN_CROSS_SECTIONAL_AREA_DIV")
     )
-    initial_height = float(environ.get("INITIAL_HEIGHT"))
+    initial_state = float(environ.get("INITIAL_HEIGHT"))
     goal_height = float(environ.get("GOAL_HEIGHT"))
 
     def __init__(
         self,
         A: float = cross_sectional_area,
         C: float = drain_cross_sectional_area,
-        H_0: float = initial_height,
+        H_0: float = initial_state,
         target: float = goal_height,
     ) -> None:
         """

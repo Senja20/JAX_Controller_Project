@@ -75,13 +75,13 @@ class PIDController(GeneralController):
 
         self.error = target_state - current_state
 
-        self.predictions = params["K_p"] * self.error
+        self.proportional = params["K_p"] * self.error
         self.derivate = params["K_d"] * super()._calculate_derivative()
         self.integral = params["K_i"] * error_history
 
         self.last_error = self.error
 
-        return self.predictions + self.derivate + self.integral
+        return self.proportional + self.derivate + self.integral
 
     def update_params(self, grad: dict) -> None:
         """¨
