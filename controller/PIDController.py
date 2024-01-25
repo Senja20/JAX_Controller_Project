@@ -1,8 +1,6 @@
-import jax.numpy as jnp
 from controller.GeneralController import GeneralController
 import matplotlib.pyplot as plt
 import random
-from os import environ
 from dotenv import load_dotenv
 
 # random initialization of the parameters

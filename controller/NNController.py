@@ -1,7 +1,6 @@
 import jax.numpy as jnp
 from .GeneralController import GeneralController
-import jax
-from jax import random, grad, jit, vmap
+from jax import random, nn
 from jax.scipy.special import logsumexp
 from os import environ
 from dotenv import load_dotenv
@@ -35,7 +34,7 @@ class NNController(GeneralController):
             ),
         )
 
-        self.activation = jax.nn.sigmoid
+        self.activation = nn.sigmoid
         # self.activation = jax.nn.relu
         # self.activation = jax.nn.tanh
 

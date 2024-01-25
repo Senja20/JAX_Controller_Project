@@ -3,14 +3,10 @@
 weights and biases for a neural-net-based controller
 """
 
-import numpy as np
 import jax.numpy as jnp
-import jax
+from jax import value_and_grad, jit
 from os import environ
 from dotenv import load_dotenv
-import pprint
-import random
-import matplotlib.pyplot as plt
 
 
 # controller imports
@@ -58,7 +54,7 @@ class CONSYS:
         # added two zeros to error_history to avoid error in mean_square_error
         error_history = []
 
-        grad_func = jax.jit(jax.value_and_grad(self.run_epoch, argnums=0))
+        grad_func = jit(value_and_grad(self.run_epoch, argnums=0))
 
         for epoch in range(int(environ.get("NUMBER_OF_EPOCHS"))):
             # run the epoch
@@ -144,5 +140,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(PIDController, CournotCompetition)
+    system = CONSYS(PIDController, BathtubModel)
     error_history = system.run()
