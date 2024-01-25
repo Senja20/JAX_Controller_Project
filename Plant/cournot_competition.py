@@ -1,9 +1,10 @@
 import jax.numpy as jnp
 from os import environ
 from dotenv import load_dotenv
+from .Plant import Plant
 
 
-class CournotCompetition:
+class CournotCompetition(Plant):
     load_dotenv()
 
     c = float(environ.get("COST"))  # marginal cost
@@ -45,11 +46,11 @@ class CournotCompetition:
         q = self.q1 + self.q2
 
         # 4. price: p(q) = p_max - q (assume p_max = 1)
-        p = self.p_max - q
+        p = jnp.maximum(self.p_max - q, 0.0)
 
         # then on each timestep, producer 1's profit is: P_1 = p(q) * (q_1 - c_m)
         # is the marginal cost: the cost to produce each item, independent of the total number produced.
-        profit_1 = p * self.q1 - p * self.c
+        profit_1 = p * self.q1 - self.q1 * self.c
 
         return profit_1
 
@@ -58,5 +59,5 @@ class CournotCompetition:
         Reset the plant to its initial state after each epoch
         :return: None
         """
-        self.q1 = 0.0
-        self.q2 = 0.0
+        self.q1 = self.initial_state
+        self.q2 = self.initial_state

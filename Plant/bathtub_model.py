@@ -8,9 +8,10 @@ import jax.numpy as jnp
 import jax
 from os import environ
 from dotenv import load_dotenv
+from .Plant import Plant
 
 
-class BathtubModel:
+class BathtubModel(Plant):
     """
     This is the BathtubModel class.
     The bathtub is assumed to have a constant cross-sectional area (A) from top to bottom.
