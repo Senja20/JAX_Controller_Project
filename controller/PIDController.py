@@ -1,8 +1,10 @@
-from controller.GeneralController import GeneralController
-import matplotlib.pyplot as plt
 import random
+
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 from jax.numpy import clip
+
+from controller.GeneralController import GeneralController
 
 # random initialization of the parameters
 K_p = random.uniform(0, 1)

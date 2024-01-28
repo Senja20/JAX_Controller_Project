@@ -1,10 +1,12 @@
+from os import environ
+
 import jax.numpy as jnp
-from .GeneralController import GeneralController
-from jax import random, nn, tree_map
+from dotenv import load_dotenv
+from jax import nn, random, tree_map
 from jax.random import KeyArray
 from jax.scipy.special import logsumexp
-from os import environ
-from dotenv import load_dotenv
+
+from .GeneralController import GeneralController
 
 
 class NNController(GeneralController):

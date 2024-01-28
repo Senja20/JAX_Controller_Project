@@ -3,9 +3,11 @@ This is the first model of the assignment.
 It is called the BathtubModel as described in the assignment.
 """
 
-import jax.numpy as jnp
 from os import environ
+
+import jax.numpy as jnp
 from dotenv import load_dotenv
+
 from .Plant import Plant
 
 

@@ -3,23 +3,23 @@
 weights and biases for a neural-net-based controller
 """
 
-import jax.numpy as jnp
-from jax import value_and_grad, jit
 from os import environ
-from dotenv import load_dotenv
 
+import jax.numpy as jnp
+from dotenv import load_dotenv
+from jax import jit, value_and_grad
 
 # controller imports
-from controller import PIDController, NNController
+from controller import NNController, PIDController
 
 # model imports
 from plant import BathtubModel, CournotCompetition, HeatExchanger
 
-# plot imports
-from visualization import plot_error, plot_params
-
 # utils imports
 from utils import generate_random_values
+
+# plot imports
+from visualization import plot_error, plot_params
 
 
 class CONSYS:

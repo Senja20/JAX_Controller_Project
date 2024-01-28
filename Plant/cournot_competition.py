@@ -1,6 +1,8 @@
-import jax.numpy as jnp
 from os import environ
+
+import jax.numpy as jnp
 from dotenv import load_dotenv
+
 from .Plant import Plant
 
 

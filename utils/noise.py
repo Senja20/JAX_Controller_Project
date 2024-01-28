@@ -1,5 +1,5 @@
-from jax.random import PRNGKey, uniform
 import jax.numpy as jnp
+from jax.random import PRNGKey, uniform
 
 
 def generate_random_values(size, lower_bound, upper_bound):
