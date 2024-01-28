@@ -2,6 +2,7 @@ import jax.numpy as jnp
 from os import environ
 from dotenv import load_dotenv
 from .Plant import Plant
+import random
 
 
 class CournotCompetition(Plant):

@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from controller import PIDController, NNController
 
 # model imports
-from plant import BathtubModel, CournotCompetition
+from Plant import BathtubModel, CournotCompetition, TemperatureModel
 
 # plot imports
 from visualization import plot_error, plot_params
@@ -140,5 +140,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(PIDController, BathtubModel)
+    system = CONSYS(PIDController, TemperatureModel)
     error_history = system.run()
