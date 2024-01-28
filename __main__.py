@@ -4,10 +4,12 @@ weights and biases for a neural-net-based controller
 """
 
 from os import environ
+from time import sleep
 
 import jax.numpy as jnp
 from dotenv import load_dotenv
 from jax import jit, value_and_grad
+from tqdm import tqdm
 
 # controller imports
 from controller import NNController, PIDController
@@ -56,7 +58,9 @@ class CONSYS:
 
         grad_func = jit(value_and_grad(self.run_epoch, argnums=0))
 
-        for epoch in range(int(environ.get("NUMBER_OF_EPOCHS"))):
+        for epoch in tqdm(
+            range(int(environ.get("NUMBER_OF_EPOCHS"))), desc="Training", unit="epoch"
+        ):
             # run the epoch
             error, grad = grad_func(self.controller.params)
 
@@ -68,8 +72,7 @@ class CONSYS:
 
             # print params every 10 epochs - for debugging
             if epoch % 10 == 0:
-                print("Epoch: ", epoch)
-                print("Error: ", error)
+                tqdm.write(f"\rEpoch: {epoch}, Error: {error}")
 
         # pass track_K_p, track_K_d, track_K_i to plot_params
         self.controller.visualization_params()
@@ -141,5 +144,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(NNController, HeatExchanger)
+    system = CONSYS(PIDController, HeatExchanger)
     error_history = system.run()
