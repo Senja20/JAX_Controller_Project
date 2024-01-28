@@ -4,17 +4,16 @@ weights and biases for a neural-net-based controller
 """
 
 import jax.numpy as jnp
-from jax import value_and_grad, jit, device_get
+from jax import value_and_grad, jit
 from os import environ
 from dotenv import load_dotenv
-import numpy as np
 
 
 # controller imports
 from controller import PIDController, NNController
 
 # model imports
-from plant import BathtubModel, CournotCompetition
+from plant import BathtubModel, CournotCompetition, HeatExchanger
 
 # plot imports
 from visualization import plot_error, plot_params
@@ -55,13 +54,11 @@ class CONSYS:
         # added two zeros to error_history to avoid error in mean_square_error
         error_history = []
 
-        grad_func = value_and_grad(self.run_epoch, argnums=0)
+        grad_func = jit(value_and_grad(self.run_epoch, argnums=0))
 
         for epoch in range(int(environ.get("NUMBER_OF_EPOCHS"))):
             # run the epoch
             error, grad = grad_func(self.controller.params)
-
-            print("Grad: ", grad)
 
             # track the error
             error_history.append(error)
@@ -144,5 +141,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(NNController, BathtubModel)
+    system = CONSYS(NNController, HeatExchanger)
     error_history = system.run()

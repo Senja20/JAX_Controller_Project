@@ -23,7 +23,7 @@ class NNController(GeneralController):
         load_dotenv()
         super().__init__(learning_rate)
         self.params = self.__init_network_params(
-            [3, 1, 1],
+            [3, 5, 5, 5, 1],
             random.PRNGKey(0),
             (
                 float(environ.get("WEIGHT_LOWER_BOUND")),
