@@ -1,6 +1,7 @@
 import jax.numpy as jnp
 from .GeneralController import GeneralController
-from jax import random, nn
+from jax import random, nn, tree_map
+from jax.random import KeyArray
 from jax.scipy.special import logsumexp
 from os import environ
 from dotenv import load_dotenv
@@ -22,7 +23,7 @@ class NNController(GeneralController):
         load_dotenv()
         super().__init__(learning_rate)
         self.params = self.__init_network_params(
-            [3, 5, 5, 1],
+            [3, 1, 1],
             random.PRNGKey(0),
             (
                 float(environ.get("WEIGHT_LOWER_BOUND")),
@@ -35,8 +36,8 @@ class NNController(GeneralController):
         )
 
         self.activation = nn.sigmoid
-        # self.activation = jax.nn.relu
-        # self.activation = jax.nn.tanh
+        # self.activation = nn.relu
+        # self.activation = nn.tanh
 
     def __str__(self):
         """String representation of the neural network controller"""
@@ -82,9 +83,11 @@ class NNController(GeneralController):
         :return: None
         """
 
+        grad_clipped = tree_map(lambda x: jnp.clip(x, -1, 1), grad)
+
         self.params = [
             (W - self.learning_rate * dW, b - self.learning_rate * db)
-            for (W, b), (dW, db) in zip(self.params, grad)
+            for (W, b), (dW, db) in zip(self.params, grad_clipped)
         ]
 
     def visualization_params(self):
@@ -93,8 +96,22 @@ class NNController(GeneralController):
 
     # private methods
     def __random_layer_params(
-        self, input_size, output_size, key, weight_range=(-1, 1), bias_range=(-1, 1)
-    ):
+        self,
+        input_size: int,
+        output_size: int,
+        key: KeyArray,
+        weight_range: tuple[int, int],
+        bias_range: tuple[int, int],
+    ) -> tuple[jnp.ndarray, jnp.ndarray]:
+        """
+        Initialize the parameters of the neural network controller
+        :param input_size: the input size (int)
+        :param output_size: the output size (int)
+        :param key: the random key (KeyArray)
+        :param weight_range: the weight range (tuple)
+        :param bias_range: the bias range (tuple)
+        :return: the weight and bias values (tuple)
+        """
         weight_key, bias_key = random.split(key, 2)
         weight_shape = (output_size, input_size)
         bias_shape = (output_size,)
@@ -105,17 +122,42 @@ class NNController(GeneralController):
         return weight_vals, bias_vals
 
     def __init_network_params(
-        self, sizes, key, weight_range=(-1, 1), bias_range=(-1, 1)
-    ):
+        self,
+        sizes: list[int],
+        key: KeyArray,
+        weight_range: tuple[int, int] = (-1, 1),
+        bias_range: tuple[int, int] = (-1, 1),
+    ) -> list[tuple[jnp.ndarray, jnp.ndarray]]:
+        """
+        Initialize the parameters of the neural network controller
+        :param sizes: the sizes of the neural network controller (list)
+        :param key: the random key (KeyArray)
+        :param weight_range: the weight range (tuple)
+        :param bias_range: the bias range (tuple)
+        :return: the parameters of the neural network controller (list)
+        """
+
         keys = random.split(key, len(sizes))
         return [
             self.__random_layer_params(m, n, k, weight_range, bias_range)
             for m, n, k in zip(sizes[:-1], sizes[1:], keys)
         ]
 
-    def __gen_rand_vals(self, random_key, shape, value_range):
+    def __gen_rand_vals(
+        self, random_key: KeyArray, shape: tuple[int, int], value_range: tuple[int, int]
+    ) -> jnp.ndarray:
+        """
+        Generate random values
+        :param random_key: the random key (KeyArray)
+        :param shape: the shape of the random values (tuple)
+        :param value_range: the value range (tuple)
+        :return: the random values (jnp.ndarray)
+        """
+
         min_value, max_value = value_range
-        return min_value + (max_value - min_value) * random.normal(random_key, shape)
+        return min_value + (max_value - min_value) * random.uniform(
+            random_key, shape, dtype=jnp.float32
+        )
 
     def __feedforward(self, params: dict, inputs_layer: jnp.ndarray) -> float:
         """Feedforward the neural network controller

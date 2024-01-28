@@ -4,9 +4,10 @@ weights and biases for a neural-net-based controller
 """
 
 import jax.numpy as jnp
-from jax import value_and_grad, jit
+from jax import value_and_grad, jit, device_get
 from os import environ
 from dotenv import load_dotenv
+import numpy as np
 
 
 # controller imports
@@ -54,11 +55,13 @@ class CONSYS:
         # added two zeros to error_history to avoid error in mean_square_error
         error_history = []
 
-        grad_func = jit(value_and_grad(self.run_epoch, argnums=0))
+        grad_func = value_and_grad(self.run_epoch, argnums=0)
 
         for epoch in range(int(environ.get("NUMBER_OF_EPOCHS"))):
             # run the epoch
             error, grad = grad_func(self.controller.params)
+
+            print("Grad: ", grad)
 
             # track the error
             error_history.append(error)
@@ -123,7 +126,8 @@ class CONSYS:
             error_timestamp_acc += self.target - new_state
 
         # returns mean square error by using the difference between the states and the target
-        return self.mean_square_error(update_states, self.target)
+        error_ms = self.mean_square_error(update_states, self.target)
+        return error_ms
 
     def mean_square_error(self, predictions: list[float], target: float) -> float:
         """
@@ -140,5 +144,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(PIDController, BathtubModel)
+    system = CONSYS(NNController, BathtubModel)
     error_history = system.run()

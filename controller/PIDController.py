@@ -2,6 +2,7 @@ from controller.GeneralController import GeneralController
 import matplotlib.pyplot as plt
 import random
 from dotenv import load_dotenv
+from jax.numpy import clip
 
 # random initialization of the parameters
 K_p = random.uniform(0, 1)
@@ -77,12 +78,29 @@ class PIDController(GeneralController):
         :param grad: the gradients (dict)
         :return: None
         """
+
         # update the parameters
         for k, V in self.params.items():
             self.params[k] = V - self.learning_rate * grad[k]
 
         # track the parameters for visualization
         self.__track_params()
+
+    def __clip_grad(self, grad: dict, clip_value: float) -> dict:
+        """
+        Clip the gradients
+        :param grad: the gradients (dict)
+        :param clip_value: the clip value (float)
+        :return: the clipped gradients (dict)
+        """
+        grad = [
+            (
+                clip(gW, -clip_value, clip_value),
+                clip(gb, -clip_value, clip_value),
+            )
+            for gW, gb in grad
+        ]
+        return grad
 
     def visualization_params(self):
         """
