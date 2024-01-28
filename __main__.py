@@ -34,17 +34,19 @@ class CONSYS:
 
         """
         print("Initializing the system...")
+        self.controller = controller
+        self.plant = plant
         try:
-            self.controller = controller(
+            self.controller_instance = self.controller(
                 float(environ.get("LEARNING_RATE")),
             )
         except TypeError as e:
             print(e)
             # this is so that even if the values are not set in the .env file, the program will still run
-            self.controller = controller(0.01)
+            self.controller_instance = self.controller(0.01)
 
-        self.plant = plant()
-        self.target = self.plant.target
+        self.plant_instance = self.plant()
+        self.target = self.plant_instance.target
 
     def run(self) -> list:
         """
@@ -62,22 +64,24 @@ class CONSYS:
             range(int(environ.get("NUMBER_OF_EPOCHS"))), desc="Training", unit="epoch"
         ):
             # run the epoch
-            error, grad = grad_func(self.controller.params)
+            error, grad = grad_func(self.controller_instance.params)
 
             # track the error
             error_history.append(error)
 
             # (f) Update Ω based on the gradients.
-            self.controller.update_params(grad)
+            self.controller_instance.update_params(grad)
 
             # print params every 10 epochs - for debugging
             if epoch % 10 == 0:
                 tqdm.write(f"\rEpoch: {epoch}, Error: {error}")
 
         # pass track_K_p, track_K_d, track_K_i to plot_params
-        self.controller.visualization_params()
+        self.controller_instance.visualization_params()
 
-        plot_error(error_history, (str(self.controller)), (str(self.plant)))
+        plot_error(
+            error_history, (str(self.controller_instance)), (str(self.plant_instance))
+        )
 
         return error_history
 
@@ -91,11 +95,11 @@ class CONSYS:
 
         # reset the controller and the plant
         # todo: reinitialize controller and plant
-        self.controller.reset()
-        self.plant.reset()
+        self.controller_instance.reset()
+        self.plant_instance.reset()
 
         # re-initialize the history
-        update_states = jnp.array([self.plant.initial_state])
+        update_states = jnp.array([self.plant_instance.initial_state])
 
         # initialize the error accumulator
         error_timestamp_acc = 0
@@ -109,7 +113,7 @@ class CONSYS:
 
         for s in range(int(environ.get("NUMBER_OF_TIMESTEPS"))):
             # Update the controller
-            U = self.controller.update(
+            U = self.controller_instance.update(
                 params,
                 update_states[-1],
                 error_timestamp_acc,
@@ -117,7 +121,7 @@ class CONSYS:
             )
 
             # Update the plant
-            new_state = self.plant.update(U, noise_list[s])
+            new_state = self.plant_instance.update(U, noise_list[s])
 
             # save the values - used tp calculate the error in MSE function
             update_states = jnp.append(update_states, new_state)
@@ -144,5 +148,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(PIDController, HeatExchanger)
+    system = CONSYS(NNController, CournotCompetition)
     error_history = system.run()
