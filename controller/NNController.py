@@ -25,7 +25,7 @@ class NNController(GeneralController):
         load_dotenv()
         super().__init__(learning_rate)
         self.params = self.__init_network_params(
-            [3, 5, 5, 5, 1],
+            [3, 3, 1],
             random.PRNGKey(0),
             (
                 float(environ.get("WEIGHT_LOWER_BOUND")),
@@ -37,9 +37,10 @@ class NNController(GeneralController):
             ),
         )
 
-        self.activation = nn.sigmoid
+        # self.activation = nn.sigmoid
         # self.activation = nn.relu
         # self.activation = nn.tanh
+        self.activation = lambda x: x
 
     def __str__(self):
         """String representation of the neural network controller"""

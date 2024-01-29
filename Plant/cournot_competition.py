@@ -13,7 +13,7 @@ class CournotCompetition(Plant):
     p_max = float(environ.get("P_MAX"))  # maximum price
     target = float(environ.get("TARGET_PROFIT"))  # target profit
 
-    initial_state = 0.0  # initial state
+    initial_state = 0.5  # initial state
 
     def __init__(self, q1: float = initial_state, q2: float = initial_state) -> None:
         """
@@ -28,7 +28,7 @@ class CournotCompetition(Plant):
     def __str__(self):
         return "Cournot_Competition"
 
-    def update(self, signal: float, noise: float = 0.0) -> float:
+    def update(self, signal: float, noise: float) -> float:
         """
         Update the plant
         :param signal: the signal (float)
