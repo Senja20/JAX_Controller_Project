@@ -1,6 +1,6 @@
 """
-1. Initialize the controllers parameters (Ω): the three k values for a standard PID controller and the
-weights and biases for a neural-net-based controller
+This is the main file of the project.
+It contains the CONSYS class, which contains the controller, the plant and the target state.
 """
 
 from os import environ
