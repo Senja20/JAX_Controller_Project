@@ -148,5 +148,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(NNController, CournotCompetition)
+    system = CONSYS(PIDController, BathtubModel)
     error_history = system.run()
