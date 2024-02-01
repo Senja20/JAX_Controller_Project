@@ -24,8 +24,14 @@ class NNController(GeneralController):
         """Initialize the neural network controller"""
         load_dotenv()
         super().__init__(learning_rate)
+
+        # Convert layers string to integer list
+        layers_str = environ.get("LAYERS")
+        layers = [int(item) for item in layers_str.split(",")]
+        
+
         self.params = self.__init_network_params(
-            [3, 3, 1],
+            layers,
             random.PRNGKey(0),
             (
                 float(environ.get("WEIGHT_LOWER_BOUND")),
@@ -36,11 +42,18 @@ class NNController(GeneralController):
                 float(environ.get("BIAS_UPPER_BOUND")),
             ),
         )
+        # Imports activation function
+        activation_function = environ.get("ACTIVATION_FUNCTION")
 
-        # self.activation = nn.sigmoid
-        #self.activation = nn.relu
-        # self.activation = nn.tanh
-        self.activation = lambda x: x
+        match activation_function.lower():
+            case "sigmoid":
+                self.activation = nn.sigmoid
+            case "relu":
+                self.activation = nn.relu
+            case "tanh":
+                self.activation = nn.tanh
+            case "linear":
+                self.activation = lambda x: x
 
     def __str__(self):
         """String representation of the neural network controller"""
