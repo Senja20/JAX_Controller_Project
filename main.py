@@ -140,5 +140,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(PIDController, TemperatureModel)
+    system = CONSYS(NNController, TemperatureModel)
     error_history = system.run()
