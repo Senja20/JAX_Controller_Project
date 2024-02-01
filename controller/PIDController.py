@@ -1,11 +1,12 @@
 import random
+from os import environ
 
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 from jax.numpy import clip
-from os import environ
 
 from controller.GeneralController import GeneralController
+
 
 class PIDController(GeneralController):
     """PID controller class"""
@@ -67,6 +68,7 @@ class PIDController(GeneralController):
         Parameters update of the PID controller
         :param grad: the gradients (dict)
         :return: None
+        https://www.ibm.com/topics/gradient-descent
         """
 
         # update the parameters
@@ -82,6 +84,7 @@ class PIDController(GeneralController):
         :param grad: the gradients (dict)
         :param clip_value: the clip value (float)
         :return: the clipped gradients (dict)
+        https://neptune.ai/blog/understanding-gradient-clipping-and-how-it-can-fix-exploding-gradients-problem
         """
         grad = [
             (
@@ -114,3 +117,6 @@ class PIDController(GeneralController):
         self.track_K_p.append(self.params["K_p"])
         self.track_K_i.append(self.params["K_i"])
         self.track_K_d.append(self.params["K_d"])
+
+
+# https://softinery.com/blog/implementation-of-pid-controller-in-python/

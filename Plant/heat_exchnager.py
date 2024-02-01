@@ -77,3 +77,10 @@ class HeatExchanger(Plant):
             * self.heat_transfer_area  # A
             * (self.previous_temperature - self.temperature)  # delta_T
         )
+
+
+# sources:
+# https://en.wikipedia.org/wiki/Heat_transfer_coefficient
+# https://www.geeksforgeeks.org/heat-transfer-formulas/
+# https://sciencing.com/calculate-change-temperature-2696.html
+# https://www.geeksforgeeks.org/python-os-environ-object/
