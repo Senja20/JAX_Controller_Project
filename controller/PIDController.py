@@ -3,21 +3,9 @@ import random
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 from jax.numpy import clip
+from os import environ
 
 from controller.GeneralController import GeneralController
-
-# random initialization of the parameters
-K_p = random.uniform(0, 1)
-K_d = random.uniform(0, 1)
-K_i = random.uniform(0, 1)
-
-
-params_initial_PID = {
-    "K_p": K_p,  # blue
-    "K_d": K_d,  # orange
-    "K_i": K_i,  # green
-}
-
 
 class PIDController(GeneralController):
     """PID controller class"""
@@ -34,9 +22,9 @@ class PIDController(GeneralController):
         super().__init__(learning_rate)
 
         self.params = {
-            "K_p": 0.01,  # blue
-            "K_d": -0.01,  # orange
-            "K_i": 0.0,  # green
+            "K_p": float(environ.get("K_P")),  # blue
+            "K_d": float(environ.get("K_D")),  # orange
+            "K_i": float(environ.get("K_I")),  # green
         }
 
         self.track_K_p = []

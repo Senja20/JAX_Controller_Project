@@ -38,7 +38,7 @@ class NNController(GeneralController):
         )
 
         # self.activation = nn.sigmoid
-        # self.activation = nn.relu
+        #self.activation = nn.relu
         # self.activation = nn.tanh
         self.activation = lambda x: x
 

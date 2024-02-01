@@ -15,7 +15,7 @@ from tqdm import tqdm
 from controller import NNController, PIDController
 
 # model imports
-from plant import BathtubModel, CournotCompetition, HeatExchanger
+from Plant import BathtubModel, CournotCompetition, HeatExchanger
 
 # utils imports
 from utils import generate_random_values
@@ -148,5 +148,5 @@ class CONSYS:
 
 if __name__ == "__main__":
     load_dotenv()
-    system = CONSYS(PIDController, BathtubModel)
+    system = CONSYS(PIDController, CournotCompetition)
     error_history = system.run()
