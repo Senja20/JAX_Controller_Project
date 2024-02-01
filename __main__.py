@@ -17,7 +17,6 @@ from controller import NNController, PIDController
 # model imports
 from Plant import BathtubModel, CournotCompetition, HeatExchanger
 
-
 # utils imports
 from utils import generate_random_values
 
@@ -59,8 +58,11 @@ class CONSYS:
         # added two zeros to error_history to avoid error in mean_square_error
         error_history = []
 
+        # https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html
+        # https://jax.readthedocs.io/en/latest/_autosummary/jax.value_and_grad.html
         grad_func = jit(value_and_grad(self.run_epoch, argnums=0))
 
+        # https://tqdm.github.io/
         for epoch in tqdm(
             range(int(environ.get("NUMBER_OF_EPOCHS"))), desc="Training", unit="epoch"
         ):
@@ -75,6 +77,7 @@ class CONSYS:
 
             # print params every 10 epochs - for debugging
             if epoch % 10 == 0:
+                # https://stackoverflow.com/questions/36986929/redirect-print-command-in-python-script-through-tqdm-write
                 tqdm.write(f"\rEpoch: {epoch}, Error: {error}")
 
         # pass track_K_p, track_K_d, track_K_i to plot_params
@@ -142,6 +145,8 @@ class CONSYS:
         :param predictions: the states (list)
         :param target: the target state (float)
         :return: the mean square error (float)
+        https://www.machinelearningnuggets.com/jax-loss-functions/
+        https://medium.com/@sahinadirhan/simple-linear-regression-using-jax-5ef2eefb8cf4
         """
         # (d) Compute MSE over the error history.
         return jnp.mean(jnp.square(target - predictions))
@@ -152,3 +157,6 @@ if __name__ == "__main__":
 
     system = CONSYS(NNController, BathtubModel)
     error_history = system.run()
+
+# https://jax.readthedocs.io/en/latest/jax.numpy.html
+# https://www.geeksforgeeks.org/python-os-environ-object/
