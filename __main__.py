@@ -15,7 +15,7 @@ from tqdm import tqdm
 from controller import NNController, PIDController
 
 # model imports
-from Plant import BathtubModel, CournotCompetition, HeatExchanger
+from plant import BathtubModel, CournotCompetition, HeatExchanger
 
 
 # utils imports
