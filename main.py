@@ -142,3 +142,6 @@ if __name__ == "__main__":
     load_dotenv()
     system = CONSYS(NNController, TemperatureModel)
     error_history = system.run()
+
+
+# TODO: File that selects controller, model, activation function and layers
